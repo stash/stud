@@ -1039,7 +1039,13 @@ static void client_handshake(struct ev_loop *loop, ev_io *w, int revents) {
             shutdown_proxy(ps, SHUTDOWN_UP);
         }
         else {
+            unsigned long ssl_err;
             LOG("{client} Unexpected SSL error (in handshake): %d\n", err);
+            if ((ssl_err = ERR_get_error()) != 0) {
+                char err_string[128];
+                ERR_error_string_n(ssl_err, err_string, sizeof err_string);
+                LOG("{client} SSL error description (in handshake): %s\n", err_string);
+            }
             shutdown_proxy(ps, SHUTDOWN_UP);
         }
     }
@@ -1054,8 +1060,15 @@ static void handle_fatal_ssl_error(proxystate *ps, int err) {
             ERR("{client} Connection closed (in data)\n");
         else
             perror("{client} [errno] ");
-    else
+    else {
+        unsigned long ssl_err;
         ERR("{client} Unexpected SSL_read error: %d\n", err);
+        if ((ssl_err = ERR_get_error()) != 0) {
+            char err_string[128];
+            ERR_error_string_n(ssl_err, err_string, sizeof err_string);
+            LOG("{client} SSL error description (read/write): %s\n", err_string);
+        }
+    }
     shutdown_proxy(ps, SHUTDOWN_UP);
 }
 
