@@ -984,13 +984,13 @@ static void client_handshake(struct ev_loop *loop, ev_io *w, int revents) {
             shutdown_proxy(ps, SHUTDOWN_UP);
         }
         else {
-            unsigned long ssl_err;
-            LOG("{client} Unexpected SSL error (in handshake): %d\n", err);
-            if ((ssl_err = ERR_get_error()) != 0) {
+            unsigned long ssl_err = ERR_get_error();
+            LOG("{client} WHAT? Unexpected SSL error (in handshake): %d and %u\n", err, ssl_err);
+            do {
                 char err_string[128];
                 ERR_error_string_n(ssl_err, err_string, sizeof err_string);
                 LOG("{client} SSL error description (in handshake): %s\n", err_string);
-            }
+            } while ((ssl_err = ERR_get_error()) != 0);
             shutdown_proxy(ps, SHUTDOWN_UP);
         }
     }
